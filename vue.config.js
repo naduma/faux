@@ -15,6 +15,7 @@ module.exports = {
         @import 'node_modules/spectre.css/src/modals.scss';
         @import 'node_modules/spectre.css/src/navbar.scss';
         @import 'node_modules/spectre.css/src/tables.scss';
+        @import 'node_modules/spectre.css/src/tabs.scss';
         @import 'node_modules/spectre.css/src/typography.scss';
         @import 'node_modules/spectre.css/src/utilities.scss';
         `

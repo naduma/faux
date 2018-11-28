@@ -8,6 +8,7 @@
           :lineNumbers="config.lineNumbers"
           :lineWrapping="config.lineWrapping"
           :autosaveInterval="config.autosaveInterval"
+          :keyMap="config.keyMap"
           @reflectedConfig="reflectedConfig"
       />
     </main>
@@ -17,11 +18,13 @@
         :lineNumbers="config.lineNumbers"
         :lineWrapping="config.lineWrapping"
         :autosaveInterval="config.autosaveInterval"
+        :keyMap="config.keyMap"
         @save="saveConfig"
         @close="toggleConfig"
     />
     <Help
         :isActive="help.isActive"
+        :keyMap="config.keyMap"
         @close="toggleHelp"
     />
   </div>
@@ -51,7 +54,8 @@ export default {
         fontSize: 'x8',
         lineNumbers: true,
         lineWrapping: true,
-        autosaveInterval: 5000
+        autosaveInterval: 5000,
+        keyMap: 'emacs'
       },
       help: {
         isActive: false
@@ -69,11 +73,12 @@ export default {
       this.config.isActive = !this.config.isActive;
     },
 
-    saveConfig: function(fontSize, lineNumbers, lineWrapping, autosaveInterval) {
+    saveConfig: function(fontSize, lineNumbers, lineWrapping, autosaveInterval, keyMap) {
       this.config.fontSize = fontSize;
       this.config.lineNumbers = lineNumbers;
       this.config.lineWrapping = lineWrapping;
       this.config.autosaveInterval = parseInt(autosaveInterval, 10);
+      this.config.keyMap = keyMap;
       this.config.update = true;
       this.save();
     },
@@ -91,14 +96,19 @@ export default {
         this.save();
       }
       else {
-        ['fontSize', 'lineNumbers', 'lineWrapping', 'autosaveInterval'].forEach(
-          (key) => this.config[key] = this.store.get(key));
+        ['fontSize', 'lineNumbers', 'lineWrapping',
+         'autosaveInterval', 'keyMap'].forEach((key) => {
+           if (this.store.has(key)) {
+             this.config[key] = this.store.get(key);
+           }
+         });
         this.config.update = true;
       }
     },
 
     save: function() {
-      ['fontSize', 'lineNumbers', 'lineWrapping', 'autosaveInterval'].forEach(
+      ['fontSize', 'lineNumbers', 'lineWrapping',
+       'autosaveInterval', 'keyMap'].forEach(
         (key) => this.store.set(key, this.config[key]));
     }
   }

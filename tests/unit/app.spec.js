@@ -15,7 +15,7 @@ describe('App.vue', () => {
 
   it('initial', () => {
     const count = wrapper.vm.store.size();
-    expect(count).toBe(4);
+    expect(count).toBe(5);
     expect(wrapper.vm.store.get('fontSize')).toBe('x8');
   });
 

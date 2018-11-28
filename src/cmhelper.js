@@ -21,53 +21,6 @@ export const makeCodeMirror = (el, options) => {
     gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
     keyMap: 'emacs'
   });
-
-  cm.setOption('extraKeys', {
-    // window
-    'Ctrl-X O': function(cm) { CodeMirror.commands.extMoveWindow(cm); },
-    'Ctrl-X 0': function(cm) { CodeMirror.commands.extDeleteWindow(cm); },
-    'Ctrl-X 1': function(cm) { CodeMirror.commands.extDeleteOtherWindow(cm); },
-    'Ctrl-X 2': function(cm) { CodeMirror.commands.extSplitHorizon(cm); },
-    'Ctrl-X 3': function(cm) { CodeMirror.commands.extSplitVertical(cm); },
-
-    // doc
-    'Ctrl-X Ctrl-F': function(cm) { CodeMirror.commands.open(cm); },
-    'Ctrl-X B': function(cm) { CodeMirror.commands.open(cm); },
-    'Ctrl-X Delete': function(cm) { CodeMirror.commands.extDeleteDoc(cm); },
-
-    // mode
-    'Ctrl-X M': function(cm) { CodeMirror.commands.extChangeMode(cm); },
-
-    // redo
-    'Ctrl-X Ctrl-/': CodeMirror.commands.redo,
-    'Ctrl-X Ctrl-Z': CodeMirror.commands.redo,
-    'Ctrl-X Shift-Ctrl--': CodeMirror.commands.redo,
-    'Ctrl-X Cmd-Z': CodeMirror.commands.redo,
-
-    // misc
-    'Ctrl-M': CodeMirror.commands.newlineAndIndent,
-    'Ctrl-C': function(cm) { cm.foldCode(cm.getCursor()); },
-    'Ctrl-J': function(cm) {
-      CodeMirror.keyMap.emacs['Ctrl-J'](cm);
-      const name = cm.getDoc().name;
-      if (name == SCRATCH) {
-        const doc = cm.getDoc();
-        const cursor = doc.getCursor();
-        try {
-          const result = evalExpr(doc.getRange(CodeMirror.Pos(0, 0), cursor));
-          if (result !== null) {
-            const line = doc.getLine(cursor.line);
-            const pos = CodeMirror.Pos(cursor.line, line.length - 1);
-            doc.replaceRange(`${result}\n`, pos);
-          }
-        }
-        catch(e) {
-          openNotification(cm, `eval: ${e.message}`);
-        }
-      }
-    }
-  });
-
   return cm;
 }
 
@@ -145,3 +98,107 @@ export const addCommands = (commands) => {
     CodeMirror.commands[name] = action;
   }
 }
+
+// Emacs
+const originals = Object.assign({}, CodeMirror.keyMap.emacs);
+
+const foldCode = (cm) => {
+  cm.foldCode(cm.getCursor());
+};
+
+const evalOperation = (cm) => {
+  originals['Ctrl-J'](cm);
+  const name = cm.getDoc().name;
+  if (name == SCRATCH) {
+    const doc = cm.getDoc();
+    const cursor = doc.getCursor();
+    try {
+      const result = evalExpr(doc.getRange(CodeMirror.Pos(0, 0), cursor));
+      if (result !== null) {
+        const line = doc.getLine(cursor.line);
+        const pos = CodeMirror.Pos(cursor.line, line.length - 1);
+        doc.replaceRange(`${result}\n`, pos);
+      }
+    }
+    catch(e) {
+      openNotification(cm, `eval: ${e.message}`);
+    }
+  }
+};
+
+CodeMirror.keyMap.emacs = {
+  ...CodeMirror.keyMap.emacs,
+
+  // window
+  'Ctrl-X O': function(cm) { CodeMirror.commands.extMoveWindow(cm); },
+  'Ctrl-X 0': function(cm) { CodeMirror.commands.extDeleteWindow(cm); },
+  'Ctrl-X 1': function(cm) { CodeMirror.commands.extDeleteOtherWindow(cm); },
+  'Ctrl-X 2': function(cm) { CodeMirror.commands.extSplitHorizon(cm); },
+  'Ctrl-X 3': function(cm) { CodeMirror.commands.extSplitVertical(cm); },
+
+  // doc
+  'Ctrl-X Ctrl-F': function(cm) { CodeMirror.commands.open(cm); },
+  'Ctrl-X B': function(cm) { CodeMirror.commands.open(cm); },
+  'Ctrl-X Delete': function(cm) { CodeMirror.commands.extDeleteDoc(cm); },
+
+  // mode
+  'Ctrl-X M': function(cm) { CodeMirror.commands.extChangeMode(cm); },
+
+  // redo
+  'Ctrl-X Ctrl-/': CodeMirror.commands.redo,
+  'Ctrl-X Ctrl-Z': CodeMirror.commands.redo,
+  'Ctrl-X Shift-Ctrl--': CodeMirror.commands.redo,
+  'Ctrl-X Cmd-Z': CodeMirror.commands.redo,
+
+  // misc
+  'Ctrl-M': CodeMirror.commands.newlineAndIndent,
+  'Ctrl-I': function(cm) { foldCode(cm); },
+  'Ctrl-J': function(cm) { evalOperation(cm); }
+};
+
+// Vim
+// window
+CodeMirror.Vim.defineAction('moveWindow', (cm) => CodeMirror.commands.extMoveWindow(cm));
+CodeMirror.Vim.mapCommand('<C-w>w', 'action', 'moveWindow', {});
+CodeMirror.Vim.mapCommand('<C-w><C-w>', 'action', 'moveWindow', {});
+
+CodeMirror.Vim.defineEx('quit', 'q', (cm) => CodeMirror.commands.extDeleteWindow(cm));
+CodeMirror.Vim.map('<C-w>q', ':quit', 'normal');
+CodeMirror.Vim.map('<C-w><C-q>', ':quit', 'normal');
+CodeMirror.Vim.defineEx('close', 'clo', (cm) => CodeMirror.commands.extDeleteWindow(cm));
+CodeMirror.Vim.map('<C-w>c', ':close', 'normal');
+CodeMirror.Vim.defineEx('only', 'on', (cm) => CodeMirror.commands.extDeleteOtherWindow(cm));
+CodeMirror.Vim.map('<C-w>o', ':only', 'normal');
+CodeMirror.Vim.map('<C-w><C-o>', ':only', 'normal');
+
+CodeMirror.Vim.defineEx('split', 'sp', (cm) => CodeMirror.commands.extSplitHorizon(cm));
+CodeMirror.Vim.map('<C-w>s', ':split', 'normal');
+
+CodeMirror.Vim.defineEx('vsplit', 'vs', (cm) => CodeMirror.commands.extSplitVertical(cm));
+CodeMirror.Vim.map('<C-w>v', ':vsplit', 'normal');
+CodeMirror.Vim.map('<C-w><C-v>', ':vsplit', 'normal');
+
+// doc
+CodeMirror.Vim.defineEx('edit', 'e', (cm, params) => {
+  if (params.args) {
+    const name = params.args[0];
+    if (name.replace(/\s+/g, '') !== '') {
+      CodeMirror.commands.extOpenDoc(cm, name);
+      return;
+    }
+  }
+  CodeMirror.commands.open(cm);
+});
+CodeMirror.Vim.defineAction('deleteDoc', (cm) => CodeMirror.commands.extDeleteDoc(cm));
+CodeMirror.Vim.mapCommand('<C-w><Del>', 'action', 'deleteDoc', {});
+
+// mode
+CodeMirror.Vim.defineAction('changeMode', (cm) => CodeMirror.commands.extChangeMode(cm));
+CodeMirror.Vim.mapCommand('<C-w>m', 'action', 'changeMode', {});
+
+// misc
+CodeMirror.Vim.defineAction('fold', (cm) => foldCode(cm));
+CodeMirror.Vim.mapCommand('<C-w>i', 'action', 'fold', {});
+CodeMirror.Vim.mapCommand('<C-w><C-i>', 'action', 'fold', {});
+CodeMirror.Vim.defineAction('evalExpr', (cm) => evalOperation(cm));
+CodeMirror.Vim.mapCommand('<C-j>', 'action', 'evalExpr', {}, { context: 'insert' });

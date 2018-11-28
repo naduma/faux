@@ -38,6 +38,13 @@
             <option value=30000>30</option>
           </select>
         </div>
+        <div class="form-group">
+          <label class="form-label">Keymap</label>
+          <select class="form-select" v-model="keymap_">
+            <option value="emacs">Emacs</option>
+            <option value="vim">Vim</option>
+          </select>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-primary" v-on:click="save">Save</button>
@@ -54,14 +61,16 @@ export default {
     fontSize: String,
     lineNumbers: Boolean,
     lineWrapping: Boolean,
-    autosaveInterval: Number
+    autosaveInterval: Number,
+    keyMap: String
   },
   data: function () {
     return {
       fontsize_: null,
       linenum_: null,
       linewrap_: null,
-      interval_: null
+      interval_: null,
+      keymap_: null
     }
   },
   watch: {
@@ -70,12 +79,15 @@ export default {
       this.linenum_ = this.lineNumbers;
       this.linewrap_ = this.lineWrapping;
       this.interval_ = this.autosaveInterval;
+      this.keymap_ = this.keyMap;
     }
   },
   methods: {
     save: function() {
-      this.$emit('save',
-                 this.fontsize_, this.linenum_, this.linewrap_, this.interval_);
+      this.$emit(
+        'save', this.fontsize_, this.linenum_, this.linewrap_,
+        this.interval_, this.keymap_
+      );
       this.$emit('close');
     }
   }

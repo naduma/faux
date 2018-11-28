@@ -30,6 +30,7 @@
 <script>
 import CodeMirror from 'codemirror';
 import 'codemirror/keymap/emacs';
+import 'codemirror/keymap/vim';
 import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/addon/edit/closetag';
 import 'codemirror/addon/fold/foldcode';
@@ -70,7 +71,8 @@ export default {
     fontSize: String,
     lineNumbers: Boolean,
     lineWrapping: Boolean,
-    autosaveInterval: Number
+    autosaveInterval: Number,
+    keyMap: String
   },
   data: function() {
     return {
@@ -93,7 +95,8 @@ export default {
       for (const [_, cm] of Object.entries(this.cms)) {
         setOptions(cm, {
           lineNumbers: this.lineNumbers,
-          lineWrapping: this.lineWrapping
+          lineWrapping: this.lineWrapping,
+          keyMap: this.keyMap
         });
         cm.refresh();
       }
@@ -106,6 +109,7 @@ export default {
     // define commands
     addCommands({
       open: (cm) => openDocDialog(cm, this.getAllDocNames, this.openDoc),
+      extOpenDoc: (cm, name) => this.openDoc(cm.options.cid, name),
       extMoveWindow: (cm) => this.moveWindow(cm.options.cid),
       extDeleteWindow: (cm) => this.deleteWindow(cm.options.cid),
       extDeleteOtherWindow: (cm) => this.deleteOther(cm.options.cid),
@@ -123,7 +127,8 @@ export default {
     // setup codemirror
     const options = {
       lineNumbers: this.lineNumbers,
-      lineWrapping: this.lineWrapping
+      lineWrapping: this.lineWrapping,
+      keyMap: this.keyMap
     };
     for (const [cid] of Object.entries(this.cms)) {
       const el = this.$refs[cid].querySelector('textarea');
