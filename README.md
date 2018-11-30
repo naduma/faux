@@ -4,7 +4,7 @@ faux is an Emacs-like editor that works in your browser.
 
 ## Features
 
-* Emac-like Keybinds
+* Emac-like / Vim-like Keybinds
 * Lisp (scheme) REPL
 * Multiple Buffer & Split View
 * Auto Save To localStorage
